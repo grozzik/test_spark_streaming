@@ -1,4 +1,5 @@
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.functions._
+import org.apache.spark.sql.{DataFrame, SparkSession}
 
 object myRateStream extends App {
 
@@ -11,10 +12,13 @@ object myRateStream extends App {
     .format("rate")
     .load()
 
-  val query = lines.writeStream
-    .format("csv")        // can be "orc", "json", "csv", etc.
-    .option("path", args(0))
-    .start()
+  val query = lines.writeStream.foreachBatch { (batchDF: DataFrame, batchId: Long) =>
+    batchDF
+      .withColumn("batchId", lit(batchId))
+      .write
+      .format("csv")
+      .save(args(0))
+  }.start()
 
   query.awaitTermination()
 
