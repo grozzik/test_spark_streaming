@@ -12,7 +12,8 @@ object myRateStream extends App {
     .load()
 
   val query = lines.writeStream
-    .format("console")
+    .format("csv")        // can be "orc", "json", "csv", etc.
+    .option("path", args(0))
     .start()
 
   query.awaitTermination()
